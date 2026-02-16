@@ -68,6 +68,10 @@ function pollPayload(poll) {
   };
 }
 
+function stripTrailingSlashes(url) {
+  return String(url || "").replace(/\/+$/, "");
+}
+
 function renderPollPage(poll) {
   const encodedOptions = encodeURIComponent(JSON.stringify(poll.options));
 
@@ -428,7 +432,8 @@ router.post("/poll", async (req, res, next) => {
     }
 
     const poll = await Poll.create({ question, options });
-    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get("host")}`;
+    const configuredBaseUrl = process.env.BASE_URL || `${req.protocol}://${req.get("host")}`;
+    const baseUrl = stripTrailingSlashes(configuredBaseUrl);
 
     return res.status(201).json({
       message: "Poll created successfully.",
