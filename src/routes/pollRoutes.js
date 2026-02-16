@@ -1,8 +1,10 @@
+// ========== IMPORTS ========== //
 const path = require("path");
 const express = require("express");
 const mongoose = require("mongoose");
 const Poll = require("../models/Poll");
 
+// ========== ROUTER + CONSTANTS ========== //
 const router = express.Router();
 const QUESTION_MAX_LENGTH = 300;
 const OPTION_MAX_LENGTH = 120;
@@ -10,6 +12,7 @@ const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 10;
 const TOKEN_MAX_LENGTH = 128;
 
+// ========== HELPERS ========== //
 function normalizeOptions(options) {
   if (!Array.isArray(options)) {
     return [];
@@ -72,6 +75,7 @@ function stripTrailingSlashes(url) {
   return String(url || "").replace(/\/+$/, "");
 }
 
+// ========== VIEW RENDERER ========== //
 function renderPollPage(poll) {
   const encodedOptions = encodeURIComponent(JSON.stringify(poll.options));
 
@@ -248,6 +252,7 @@ function renderPollPage(poll) {
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+      // ========== CLIENT STATE ========== //
       const pollId = "${poll._id}";
       const voteForm = document.getElementById("voteForm");
       const errorText = document.getElementById("error");
@@ -260,6 +265,7 @@ function renderPollPage(poll) {
       let hasVoted = false;
       let duplicateVoteBlocked = false;
 
+      // ========== CLIENT HELPERS ========== //
       let currentOptions = JSON.parse(decodeURIComponent("${encodedOptions}"));
 
       function escapeText(value) {
@@ -333,6 +339,7 @@ function renderPollPage(poll) {
 
       const voterToken = getOrCreateVoterToken();
 
+      // ========== SOCKET EVENTS ========== //
       socket.emit("poll:join", pollId);
       socket.on("poll:update", (payload) => {
         if (!payload || payload.pollId !== pollId || !Array.isArray(payload.options)) {
@@ -343,6 +350,7 @@ function renderPollPage(poll) {
         renderResults(currentOptions);
       });
 
+      // ========== VOTE SUBMIT FLOW ========== //
       voteForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         errorText.textContent = "";
@@ -402,6 +410,7 @@ function renderPollPage(poll) {
   `;
 }
 
+// ========== ROUTES ========== //
 router.get("/", (req, res) => {
   res.sendFile(path.join(process.cwd(), "views", "createPoll.html"));
 });
@@ -540,4 +549,5 @@ router.post("/poll/:id/vote", async (req, res, next) => {
   }
 });
 
+// ========== EXPORT ========== //
 module.exports = router;

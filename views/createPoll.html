@@ -149,12 +149,14 @@
     </main>
 
     <script>
+      // ========== CLIENT STATE ========== //
       const form = document.getElementById("createPollForm");
       const result = document.getElementById("result");
       const defaultSubmitLabel = "Create Poll";
       const loadingSubmitLabel = "Creating...";
       let isSubmitting = false;
 
+      // ========== COPY LINK HANDLER ========== //
       result.addEventListener("click", async (event) => {
         const target = event.target;
         if (!target || !target.classList.contains("copy-btn")) {
@@ -177,6 +179,7 @@
         }
       });
 
+      // ========== CREATE POLL SUBMIT FLOW ========== //
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
         if (isSubmitting) {

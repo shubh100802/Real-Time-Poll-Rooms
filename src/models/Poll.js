@@ -1,5 +1,7 @@
+// ========== IMPORTS ========== //
 const mongoose = require("mongoose");
 
+// ========== SUB-SCHEMAS ========== //
 const optionSchema = new mongoose.Schema(
   {
     text: {
@@ -17,6 +19,7 @@ const optionSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// ========== MAIN SCHEMA ========== //
 const pollSchema = new mongoose.Schema(
   {
     question: {
@@ -44,4 +47,5 @@ const pollSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ========== EXPORT ========== //
 module.exports = mongoose.model("Poll", pollSchema);

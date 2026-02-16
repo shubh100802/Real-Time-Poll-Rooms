@@ -1,5 +1,7 @@
+// ========== IMPORTS ========== //
 const mongoose = require("mongoose");
 
+// ========== DATABASE CONNECTION ========== //
 async function connectDatabase() {
   const mongoUri = process.env.MONGODB_URI;
 
@@ -11,4 +13,5 @@ async function connectDatabase() {
   console.log("MongoDB connected.");
 }
 
+// ========== EXPORT ========== //
 module.exports = { connectDatabase };
