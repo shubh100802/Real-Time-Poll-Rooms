@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Poll</title>
+    <style>
+      :root {
+        --bg: #f4efe6;
+        --card: #fffdf8;
+        --ink: #1f2933;
+        --muted: #5f6c7b;
+        --line: #d8cdb9;
+        --brand: #0f766e;
+        --brand-strong: #0b5b55;
+        --danger: #b42318;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 90% 10%, #f0d9b5 0%, transparent 40%),
+          radial-gradient(circle at 10% 90%, #c8e7e3 0%, transparent 35%),
+          var(--bg);
+        display: grid;
+        place-items: center;
+        padding: 20px;
+      }
+
+      .card {
+        width: min(760px, 100%);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: 0 12px 30px rgba(31, 41, 51, 0.08);
+        padding: 24px;
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        letter-spacing: 0.2px;
+      }
+
+      .sub {
+        margin: 0 0 18px;
+        color: var(--muted);
+      }
+
+      form {
+        display: grid;
+        gap: 12px;
+      }
+
+      input,
+      button {
+        font-size: 16px;
+      }
+
+      input {
+        width: 100%;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        border-radius: 10px;
+        padding: 11px 12px;
+      }
+
+      input:focus {
+        outline: 2px solid #99d2cd;
+        border-color: var(--brand);
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        background: var(--brand);
+        color: #fff;
+        font-weight: 600;
+        padding: 12px;
+        cursor: pointer;
+        transition: background 140ms ease;
+      }
+
+      button:hover:enabled {
+        background: var(--brand-strong);
+      }
+
+      button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      #result {
+        margin-top: 14px;
+        word-break: break-word;
+      }
+      .link-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 8px;
+      }
+      .copy-btn {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .error {
+        color: var(--danger);
+      }
+
+      .success {
+        color: var(--brand-strong);
+      }
+
+      a {
+        color: var(--brand-strong);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Create a Poll</h1>
+      <p class="sub">Enter your question and options, then share the generated link.</p>
+
+      <form id="createPollForm">
+        <input name="question" type="text" placeholder="Poll question" required maxlength="300" />
+        <input name="options" type="text" placeholder="Option 1" required maxlength="120" />
+        <input name="options" type="text" placeholder="Option 2" required maxlength="120" />
+        <input name="options" type="text" placeholder="Option 3 (optional)" maxlength="120" />
+        <input name="options" type="text" placeholder="Option 4 (optional)" maxlength="120" />
+        <button type="submit">Create Poll</button>
+      </form>
+
+      <div id="result"></div>
+    </main>
+
+    <script>
+      const form = document.getElementById("createPollForm");
+      const result = document.getElementById("result");
+      const defaultSubmitLabel = "Create Poll";
+      const loadingSubmitLabel = "Creating...";
+      let isSubmitting = false;
+
+      result.addEventListener("click", async (event) => {
+        const target = event.target;
+        if (!target || !target.classList.contains("copy-btn")) {
+          return;
+        }
+
+        const link = target.getAttribute("data-link");
+        if (!link) {
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(link);
+          target.textContent = "Copied";
+          setTimeout(() => {
+            target.textContent = "Copy Link";
+          }, 1200);
+        } catch (error) {
+          target.textContent = "Copy failed";
+        }
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (isSubmitting) {
+          return;
+        }
+
+        result.className = "";
+        const formData = new FormData(form);
+        const payload = {
+          question: formData.get("question"),
+          options: formData.getAll("options"),
+        };
+
+        const submitButton = form.querySelector("button[type='submit']");
+        try {
+          isSubmitting = true;
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = loadingSubmitLabel;
+          }
+
+          const response = await fetch("/poll", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            result.className = "error";
+            result.textContent = data.error || "Failed to create poll.";
+            return;
+          }
+
+          result.className = "success";
+          result.innerHTML =
+            `Share this link:` +
+            `<div class="link-row">` +
+            `<a href="${data.shareUrl}">${data.shareUrl}</a>` +
+            `<button type="button" class="copy-btn" data-link="${data.shareUrl}">Copy Link</button>` +
+            `</div>`;
+          form.reset();
+        } finally {
+          isSubmitting = false;
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = defaultSubmitLabel;
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "real-time-poll-rooms",
+  "version": "1.0.0",
+  "description": "Full-stack assignment: Real-Time Poll Rooms",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.11.0",
+    "socket.io": "^4.8.1"
+  }
+}
